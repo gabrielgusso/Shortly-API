@@ -19,7 +19,8 @@ CREATE TABLE "shorten" (
 	"id" serial PRIMARY KEY,
 	"url" TEXT NOT NULL,
 	"shortUrl" TEXT NOT NULL,
-	"userId" integer NOT NULL
+	"userId" integer NOT NULL,
+	"createdAt" DATE NOT NULL DEFAULT NOW()
 );
 
 
