@@ -1,32 +1,47 @@
 import bcrypt from "bcrypt"
 import { v4 as uuid } from "uuid"
 import { connection } from "../dataBase/db.js"
-import { authSignInSchema, authSignUpSchema } from "../schemas/auth.schema.js"
 
 export async function signUpAuthController(req, res) {
-  const auth = req.body
-  const { name, email, password } = auth
-
-  const validation = authSignUpSchema.validate(auth, { abortEarly: false })
-  if (validation.error) {
-    const error = validation.error.details.map((detail) => detail.message)
-    res.status(422).send(error)
-    return
-  }
+  const { name, email, password } = req.body
 
   const newPassword = bcrypt.hashSync(password, 10)
 
   try {
-    await connection.query("INSERT INTO users (name, email, password) VALUES ($1, $2, $3)", [
+    await connection.query("INSERT INTO users (name, emailF, password) VALUES ($1, $2, $3)", [
       name, email, newPassword
     ])
     res.sendStatus(200)
   } catch (err) {
-    console.log(err)
-    es.sendStatus(400)
+    res.send(err).status(400)
   }
 }
 
 export async function signInAuthController(req, res) {
+  const { email, password } = req.body
 
+  try {
+    const userFounded = await connection.query("SELECT * FROM users WHERE email=$1", [
+     email
+    ])
+
+    if (!userFounded.rows[0]) {
+      return res.sendStatus(404)
+    }
+
+    const passwordCompared = bcrypt.compareSync(password, userFounded.rows[0].password)
+
+    if (!passwordCompared) {
+      return res.sendStatus(401)
+    }
+    const token = uuid()
+
+     await connection.query('INSERT INTO session ("userId", token) VALUES ($1, $2)', [
+     userFounded.rows[0].id, token
+    ])
+    
+    res.send(token)
+  } catch (err) {
+    res.send(err).status(400)
+  }
 }
