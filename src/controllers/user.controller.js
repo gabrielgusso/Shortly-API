@@ -5,13 +5,10 @@ export async function userController(req, res) {
 
   try {
     const userData = await connection.query(
-      `SELECT u.id, u.name, SUM(s."viewsCounter") AS "visitCount",
-      json_agg(s.*) AS "shortenedUrls"
-       FROM users u
-       JOIN shorten s
-       ON u.id = s."userId"
-       WHERE u.id = $1
-       GROUP BY u.id, s."userId";`,
+      `SELECT s."userId", u.name, COUNT(s.url) AS "linksCounter", SUM(s."viewsCounter") AS "visitCount" 
+FROM shorten s JOIN users u ON s."userId" = u.id
+GROUP BY u.name, s."userId"
+ORDER BY "visitCount" DESC LIMIT 10";`,
       [userId]
     )
     
