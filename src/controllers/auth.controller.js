@@ -6,11 +6,13 @@ export async function signUpAuthController(req, res) {
   const { name, email, password } = req.body
 
   const newPassword = bcrypt.hashSync(password, 10)
-
+  
   try {
-    await connection.query("INSERT INTO users (name, emailF, password) VALUES ($1, $2, $3)", [
+    
+    await connection.query("INSERT INTO users (name, email, password) VALUES ($1, $2, $3)", [
       name, email, newPassword
     ])
+
     res.sendStatus(200)
   } catch (err) {
     res.send(err).status(400)
@@ -30,7 +32,7 @@ export async function signInAuthController(req, res) {
     }
 
     const passwordCompared = bcrypt.compareSync(password, userFounded.rows[0].password)
-
+    
     if (!passwordCompared) {
       return res.sendStatus(401)
     }
